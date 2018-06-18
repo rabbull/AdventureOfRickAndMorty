@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
 using UnityEngine.UI;
 
 public class Tape : MonoBehaviour
 {
-    public const int PerformLeft = 1;
-    public const int PerformRight = 1;
-    public const int PerformAdd = 1;
-    public const int PerformMinus = 1;
+    private const int PerformNothing = 0;
+    private const int PerformLeft = 1;
+    private const int PerformRight = 2;
+    private const int PerformAdd = 3;
+    private const int PerformMinus = 4;
 
+    private List<char> _code;
+    private List<short> _book;
+    private List<GameObject> _password;
 
-    private int perform;
+    private int _perform;
     public bool RickMoving;
+    public bool RoundEnded;
 
     private Text _buffer;
     private GameObject _rick;
@@ -32,6 +39,7 @@ public class Tape : MonoBehaviour
 
     private void Awake()
     {
+        RoundEnded = true;
         _buffer = GameObject.Find("Buff").GetComponent<Text>();
         _rick = GameObject.Find("Rick");
         _rickInitPosition = _rick.transform.position;
@@ -43,34 +51,35 @@ public class Tape : MonoBehaviour
 
     private void Update()
     {
-        if (RickMoving)
+        if (RickMoving || RoundEnded)
         {
             return;
         }
 
-        switch (perform)
+        var cursor = 0;
+        var passwordCursor = 0;
+        Run(ref cursor, ref passwordCursor);
+
+        switch (_perform)
         {
-            case 1:
+            case PerformNothing:
+                break;
+            case PerformLeft:
                 MoveLeft();
                 break;
-            case 2:
+            case PerformRight:
                 MoveRight();
                 break;
-            case 3:
+            case PerformAdd:
                 AddOne();
                 break;
-            case 4:
+            case PerformMinus:
                 MinusOne();
                 break;
             default:
                 Debug.Log("error");
                 break;
         }
-    }
-
-    public void Perform(int p)
-    {
-        perform = p;
     }
 
     private void UpdateBuffer()
@@ -85,14 +94,18 @@ public class Tape : MonoBehaviour
 
     private void AddOne()
     {
+        RickMoving = true;
         _buff[_position] += 1;
         UpdateBuffer();
+        RickMoving = false;
     }
 
     private void MinusOne()
     {
+        RickMoving = true;
         _buff[_position] -= 1;
         UpdateBuffer();
+        RickMoving = false;
     }
 
     private void MoveRight()
@@ -125,7 +138,7 @@ public class Tape : MonoBehaviour
         UpdateBuffer();
     }
 
-    public int GetData()
+    private int GetData()
     {
         return _buff[_position];
     }
@@ -157,4 +170,108 @@ public class Tape : MonoBehaviour
         _position = 0;
         _rick.transform.position = _rickInitPosition;
     }
+
+    private static IEnumerable<short> Check(IReadOnlyList<char> code)
+    {
+        var book = new List<short>();
+        return Check(code, ref book) ? book : null;
+    }
+
+    private static bool Check(IReadOnlyList<char> code, ref List<short> book)
+    {
+        var stack = new Stack<short>();
+        book.Clear();
+        var length = code.Count;
+        short cnt = 0;
+
+        for (var i = 0; i < length; i++)
+        {
+            if (code[i] == '[')
+            {
+                stack.Push(cnt);
+                book.Add(cnt);
+                cnt += 1;
+            }
+            else if (code[i] == ']')
+            {
+                if (stack.Count == 0)
+                {
+                    return false;
+                }
+
+                book.Add(cnt);
+                stack.Pop();
+            }
+
+            book.Add(-1);
+        }
+
+        return true;
+    }
+
+    public void SetCode(List<char> code)
+    {
+        RoundEnded = false;
+        _code = code;
+    }
+
+    public void SetPassword(List<GameObject> password)
+    {
+        _password = password;
+    }
+
+    private void Run(ref int cursor, ref int passwordCursor)
+    {
+        int i;
+        switch (_code.ElementAt(cursor))
+        {
+            case '>':
+                _perform = PerformRight;
+                break;
+            case '<':
+                _perform = PerformLeft;
+                break;
+            case '+':
+                _perform = PerformAdd;
+                break;
+            case '-':
+                _perform = PerformMinus;
+                break;
+            case '[':
+                if (GetData() == 0)
+                {
+                    for (i = cursor + 1; i < _code.Count && _code.ElementAt(i) != _code.ElementAt(cursor); i++)
+                    {
+                    }
+
+                    cursor = i;
+                }
+
+                break;
+            case ']':
+                if (GetData() != 0)
+                {
+                    for (i = cursor - 1; i >= 0 && _code.ElementAt(i) != _code.ElementAt(cursor); i--)
+                    {
+                    }
+
+                    cursor = i;
+                }
+
+                break;
+            case '.':
+                _password[passwordCursor].GetComponent<Text>().text = GetData().ToString();
+                passwordCursor += 1;
+                break;
+            default:
+                Debug.Log("error!");
+                break;
+        }
+
+        if (cursor == _code.Count - 1)
+        {
+            RoundEnded = true;
+        }
+    }
+
 }
