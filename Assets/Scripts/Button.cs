@@ -18,6 +18,7 @@ public abstract class Button : MonoBehaviour
             if (c.gameObject != gameObject) continue;
             _tmpobj = c.gameObject;
             c.transform.GetComponent<SpriteRenderer>().sortingOrder = -1;
+            GameManager.Instance.ShowCursor();
             OnClickEvent();
         }
     }

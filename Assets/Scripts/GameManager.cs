@@ -7,11 +7,14 @@ public class GameManager : MonoBehaviour
     private int _position;
     private List<char> _code;
     private List<GameObject> _password;
+    private GameObject _cursor;
     private static GameManager _instance;
+    private const float CharactorWidth = 0.4785f;
+
 
     private GameObject _tape;
     
-    public Text CodeText;
+    private GameObject _codeText;
 
     public static GameManager Instance
     {
@@ -47,32 +50,63 @@ public class GameManager : MonoBehaviour
         _password.Add(GameObject.Find("Password1"));
         _password.Add(GameObject.Find("Password2"));
         _password.Add(GameObject.Find("Password3"));
+        
+        _codeText = GameObject.Find("Code");
+        
+        _cursor = GameObject.Find("Cursor");
     }
 
     public void AddNewInstruction (char c)
     {
         _code.Insert (_position, c);
-        CodeText.text = new string(_code.ToArray());
-        _position += 1;
+        _codeText.GetComponent<Text>().text = new string(_code.ToArray());
+        MoveCursor(false);
     }
 
-    public void MoveCursor (bool toLeft)
+    public void MoveCursor(bool toLeft)
     {
+        var cursorMoves = true;
+        var towards = new Vector3(0, 0, 0);
         if (toLeft)
         {
-            _position -= 1;
-            if (_position == -1)
+            if (_position != 0)
             {
-                _position = 0;
+                _position -= 1;
+                if (_cursor.transform.position.x > -4.4f || _position < 1)
+                {
+                    towards -= new Vector3(CharactorWidth, 0, 0);
+                }
+                else
+                {
+                    cursorMoves = false;
+                    towards += new Vector3(CharactorWidth, 0, 0);
+                }
             }
         }
         else
         {
-            _position += 1;
-            if (_position == _code.Count + 1)
+            if (_position != _code.Count + 1)
             {
-                _position = _code.Count;
+                _position += 1;
+                if (_cursor.transform.position.x <= 4.3f)
+                {
+                    towards += new Vector3(CharactorWidth, 0, 0);
+                }
+                else
+                {
+                    cursorMoves = false;
+                    towards -= new Vector3(CharactorWidth, 0, 0);
+                }
             }
+        }
+
+        if (cursorMoves)
+        {
+            _cursor.transform.position += towards;
+        }
+        else
+        {
+            _codeText.transform.position += towards;
         }
     }
 
@@ -81,18 +115,29 @@ public class GameManager : MonoBehaviour
         if (_position != 0)
         {
             _code.RemoveAt (_position - 1);
-            _position -= 1;
+            MoveCursor(true);
         }
-        CodeText.text = new string(_code.ToArray());
+        _codeText.GetComponent<Text>().text = new string(_code.ToArray());
     }
 
     public void Run()
     {
+        HideCursor();
         _tape.GetComponent<Tape>().SetData(_code, _password);
     }
 
     public void Restart()
     {
         _tape.GetComponent<Tape>().Restart();
+    }
+
+    private void HideCursor()
+    {
+        _cursor.GetComponent<SpriteRenderer>().sortingOrder = -1;
+    }
+
+    public void ShowCursor()
+    {
+        _cursor.GetComponent<SpriteRenderer>().sortingOrder = 2;
     }
 }

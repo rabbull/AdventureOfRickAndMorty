@@ -31,7 +31,7 @@ public class Tape : MonoBehaviour
 
     private float _inverseMoveTime;
 
-    private int _position;
+    private int _curr;
     private const int TapeLength = 7;
     private readonly int[] _buff = new int[TapeLength];
 
@@ -48,14 +48,14 @@ public class Tape : MonoBehaviour
 
     private int _cursor;
     private int _passwordCursor;
-    
+
     private void Update()
     {
         if (RickMoving || RoundEnded)
         {
             return;
         }
-        
+
         Run(ref _cursor, ref _passwordCursor);
 
         switch (_perform)
@@ -93,7 +93,7 @@ public class Tape : MonoBehaviour
     private void AddOne()
     {
         RickMoving = true;
-        _buff[_position] += 1;
+        _buff[_curr] += 1;
         UpdateBuffer();
         RickMoving = false;
     }
@@ -101,14 +101,14 @@ public class Tape : MonoBehaviour
     private void MinusOne()
     {
         RickMoving = true;
-        _buff[_position] -= 1;
+        _buff[_curr] -= 1;
         UpdateBuffer();
         RickMoving = false;
     }
 
     private void MoveRight()
     {
-        if (_position == TapeLength - 1)
+        if (_curr == TapeLength - 1)
         {
             return;
         }
@@ -116,13 +116,13 @@ public class Tape : MonoBehaviour
         _rickAnimator.SetTrigger("ToRight");
         var move = SmoothMovement(_rick.transform.position + new Vector3(OneStepLength, 0, 0));
         StartCoroutine(move);
-        _position++;
+        _curr++;
         UpdateBuffer();
     }
 
     private void MoveLeft()
     {
-        if (_position == 0)
+        if (_curr == 0)
         {
             return;
         }
@@ -130,13 +130,13 @@ public class Tape : MonoBehaviour
         _rickAnimator.SetTrigger("ToLeft");
         var move = SmoothMovement(_rick.transform.position + new Vector3(-OneStepLength, 0, 0));
         StartCoroutine(move);
-        _position--;
+        _curr--;
         UpdateBuffer();
     }
 
     private int GetData()
     {
-        return _buff[_position];
+        return _buff[_curr];
     }
 
     private IEnumerator SmoothMovement(Vector3 end)
@@ -158,10 +158,19 @@ public class Tape : MonoBehaviour
     {
         _cursor = 0;
         _passwordCursor = 0;
+        if (_password != null)
+        {
+            foreach (var passwd in _password)
+            {
+                passwd.GetComponent<Text>().text = "0";
+            }
+        }
+
         if (_code != null)
         {
             _book = Check(_code);
         }
+
         RickMoving = false;
         RoundEnded = true;
         _buffer.text = "";
@@ -171,7 +180,7 @@ public class Tape : MonoBehaviour
             _buffer.text += "0 ";
         }
 
-        _position = 0;
+        _curr = 0;
         _rick.transform.position = _rickInitPosition;
     }
 
@@ -191,6 +200,7 @@ public class Tape : MonoBehaviour
         {
             book.Clear();
         }
+
         var stack = new Stack<short>();
         var length = code.Count;
         short cnt = 0;
@@ -210,11 +220,12 @@ public class Tape : MonoBehaviour
                     return false;
                 }
 
-                book.Add(cnt);
-                stack.Pop();
+                book.Add(stack.Pop());
             }
-
-            book.Add(-1);
+            else
+            {
+                book.Add(-1);
+            }
         }
 
         return true;
@@ -225,6 +236,18 @@ public class Tape : MonoBehaviour
         _code = code;
         _password = password;
         RoundEnded = false;
+        _book = Check(code);
+        if (_book == null)
+        {
+            Debug.Log(_book);
+        }
+        else
+        {
+            foreach (var s in _book)
+            {
+                Debug.Log(s);
+            }
+        }
     }
 
     private void Run(ref int cursor, ref int passwordCursor)
@@ -253,13 +276,14 @@ public class Tape : MonoBehaviour
                     }
 
                     cursor = i;
+                    Debug.Log(i.ToString());
                 }
 
                 break;
             case ']':
                 if (GetData() != 0)
                 {
-                    for (i = cursor - 1; i >= 0 && _book.ElementAt(i) != _book.ElementAt(cursor); i--)
+                    for (i = cursor - 1; i < _code.Count && _book.ElementAt(i) != _book.ElementAt(cursor); i--)
                     {
                     }
 
@@ -277,7 +301,6 @@ public class Tape : MonoBehaviour
         }
 
         cursor += 1;
-
         if (cursor == _code.Count)
         {
             RoundEnded = true;
