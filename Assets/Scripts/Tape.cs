@@ -53,10 +53,14 @@ public class Tape : MonoBehaviour
     {
         if (RickMoving || RoundEnded)
         {
-            GameManager.Instance.Running = true;
+            if (RoundEnded)
+            {
+                GameManager.Instance.Running = false;
+            }
             return;
         }
 
+        GameManager.Instance.Running = true;
         Run(ref _cursor, ref _passwordCursor);
 
         switch (_perform)

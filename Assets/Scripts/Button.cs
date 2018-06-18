@@ -7,13 +7,14 @@ public abstract class Button : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
+        if (Input.GetMouseButtonUp(0))
+            if (_tmpobj != null)
+                _tmpobj.GetComponent<SpriteRenderer>().sortingOrder = 1;
         if (GameManager.Instance.Running)
         {
             return;
         }
-        if (Input.GetMouseButtonUp(0))
-            if (_tmpobj != null)
-                _tmpobj.GetComponent<SpriteRenderer>().sortingOrder = 1;
+
         if (!Input.GetMouseButtonDown(0)) return;
         var col = Physics2D.OverlapPointAll(Camera.main.ScreenToWorldPoint(Input.mousePosition));
         if (col.Length <= 0) return;
