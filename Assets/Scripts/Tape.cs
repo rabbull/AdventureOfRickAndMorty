@@ -46,16 +46,17 @@ public class Tape : MonoBehaviour
         Restart();
     }
 
+    private int _cursor;
+    private int _passwordCursor;
+    
     private void Update()
     {
         if (RickMoving || RoundEnded)
         {
             return;
         }
-
-        var cursor = 0;
-        var passwordCursor = 0;
-        Run(ref cursor, ref passwordCursor);
+        
+        Run(ref _cursor, ref _passwordCursor);
 
         switch (_perform)
         {
@@ -113,8 +114,7 @@ public class Tape : MonoBehaviour
         }
 
         _rickAnimator.SetTrigger("ToRight");
-        var end = _rick.transform.position + new Vector3(OneStepLength, 0, 0);
-        var move = SmoothMovement(end);
+        var move = SmoothMovement(_rick.transform.position + new Vector3(OneStepLength, 0, 0));
         StartCoroutine(move);
         _position++;
         UpdateBuffer();
@@ -128,8 +128,7 @@ public class Tape : MonoBehaviour
         }
 
         _rickAnimator.SetTrigger("ToLeft");
-        var end = _rick.transform.position + new Vector3(-OneStepLength, 0, 0);
-        var move = SmoothMovement(end);
+        var move = SmoothMovement(_rick.transform.position + new Vector3(-OneStepLength, 0, 0));
         StartCoroutine(move);
         _position--;
         UpdateBuffer();
@@ -157,7 +156,12 @@ public class Tape : MonoBehaviour
 
     public void Restart()
     {
-        _book = Check(_code);
+        _cursor = 0;
+        _passwordCursor = 0;
+        if (_code != null)
+        {
+            _book = Check(_code);
+        }
         RickMoving = false;
         RoundEnded = true;
         _buffer.text = "";
@@ -179,8 +183,15 @@ public class Tape : MonoBehaviour
 
     private static bool Check(IReadOnlyList<char> code, ref List<short> book)
     {
+        if (book == null)
+        {
+            book = new List<short>();
+        }
+        else
+        {
+            book.Clear();
+        }
         var stack = new Stack<short>();
-        book.Clear();
         var length = code.Count;
         short cnt = 0;
 
@@ -265,7 +276,9 @@ public class Tape : MonoBehaviour
                 break;
         }
 
-        if (cursor == _code.Count - 1)
+        cursor += 1;
+
+        if (cursor == _code.Count)
         {
             RoundEnded = true;
         }
