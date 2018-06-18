@@ -106,8 +106,12 @@ public class Tape : MonoBehaviour
     private void MinusOne()
     {
         RickMoving = true;
-        _buff[_curr] -= 1;
-        UpdateBuffer();
+        if (_buff[_curr] > 0)
+        {
+            _buff[_curr] -= 1;
+            UpdateBuffer();
+        }
+
         RickMoving = false;
     }
 
