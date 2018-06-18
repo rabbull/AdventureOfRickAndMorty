@@ -88,8 +88,7 @@ public class GameManager : MonoBehaviour
 
     public void Run()
     {
-        _tape.GetComponent<Tape>().SetCode(_code);
-        _tape.GetComponent<Tape>().SetPassword(_password);
+        _tape.GetComponent<Tape>().SetData(_code, _password);
     }
 
     public void Restart()

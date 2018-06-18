@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Experimental.PlayerLoop;
 using UnityEngine.UI;
 
 public class Tape : MonoBehaviour
@@ -39,7 +37,6 @@ public class Tape : MonoBehaviour
 
     private void Awake()
     {
-        RoundEnded = true;
         _buffer = GameObject.Find("Buff").GetComponent<Text>();
         _rick = GameObject.Find("Rick");
         _rickInitPosition = _rick.transform.position;
@@ -160,6 +157,9 @@ public class Tape : MonoBehaviour
 
     public void Restart()
     {
+        _book = Check(_code);
+        RickMoving = false;
+        RoundEnded = true;
         _buffer.text = "";
         for (var i = 0; i < TapeLength; i++)
         {
@@ -171,7 +171,7 @@ public class Tape : MonoBehaviour
         _rick.transform.position = _rickInitPosition;
     }
 
-    private static IEnumerable<short> Check(IReadOnlyList<char> code)
+    private static List<short> Check(IReadOnlyList<char> code)
     {
         var book = new List<short>();
         return Check(code, ref book) ? book : null;
@@ -209,19 +209,16 @@ public class Tape : MonoBehaviour
         return true;
     }
 
-    public void SetCode(List<char> code)
+    public void SetData(List<char> code, List<GameObject> password)
     {
-        RoundEnded = false;
         _code = code;
-    }
-
-    public void SetPassword(List<GameObject> password)
-    {
         _password = password;
+        RoundEnded = false;
     }
 
     private void Run(ref int cursor, ref int passwordCursor)
     {
+        _perform = -1;
         int i;
         switch (_code.ElementAt(cursor))
         {
@@ -240,7 +237,7 @@ public class Tape : MonoBehaviour
             case '[':
                 if (GetData() == 0)
                 {
-                    for (i = cursor + 1; i < _code.Count && _code.ElementAt(i) != _code.ElementAt(cursor); i++)
+                    for (i = cursor + 1; i < _code.Count && _book.ElementAt(i) != _book.ElementAt(cursor); i++)
                     {
                     }
 
@@ -251,7 +248,7 @@ public class Tape : MonoBehaviour
             case ']':
                 if (GetData() != 0)
                 {
-                    for (i = cursor - 1; i >= 0 && _code.ElementAt(i) != _code.ElementAt(cursor); i--)
+                    for (i = cursor - 1; i >= 0 && _book.ElementAt(i) != _book.ElementAt(cursor); i--)
                     {
                     }
 
@@ -273,5 +270,4 @@ public class Tape : MonoBehaviour
             RoundEnded = true;
         }
     }
-
 }
