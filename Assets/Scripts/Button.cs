@@ -7,6 +7,10 @@ public abstract class Button : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
+        if (GameManager.Instance.Running)
+        {
+            return;
+        }
         if (Input.GetMouseButtonUp(0))
             if (_tmpobj != null)
                 _tmpobj.GetComponent<SpriteRenderer>().sortingOrder = 1;

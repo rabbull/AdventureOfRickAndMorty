@@ -53,6 +53,7 @@ public class Tape : MonoBehaviour
     {
         if (RickMoving || RoundEnded)
         {
+            GameManager.Instance.Running = true;
             return;
         }
 

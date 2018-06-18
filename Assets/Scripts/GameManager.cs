@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -15,6 +16,8 @@ public class GameManager : MonoBehaviour
     private GameObject _tape;
     
     private GameObject _codeText;
+
+    public bool Running = false;
 
     public static GameManager Instance
     {
