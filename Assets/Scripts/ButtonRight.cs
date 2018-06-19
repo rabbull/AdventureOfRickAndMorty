@@ -2,6 +2,6 @@
 {
     protected override void OnClickEvent()
     {
-        GameManager.Instance.MoveCursor (false);
+        GameManager.Instance.MoveCursor(false);
     }
 }

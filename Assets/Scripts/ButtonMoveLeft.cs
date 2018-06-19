@@ -2,6 +2,6 @@
 {
     protected override void OnClickEvent()
     {
-        GameManager.Instance.AddNewInstruction ('<');
+        GameManager.Instance.AddNewInstruction('<');
     }
 }
